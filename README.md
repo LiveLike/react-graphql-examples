@@ -2,7 +2,7 @@
 
 ## About
 
-This is a sample app for [LiveLike](https://livelike.com)
+This is a sample app for [LiveLike](https://livelike.com) that makes use of LiveLike's GraphQL API.
 
 **Note:** For UI examples that don't use GraphQL, see our [Web SDK HTML Demo](https://github.com/LiveLike/Web-SDK-HTML-Demo)
 
