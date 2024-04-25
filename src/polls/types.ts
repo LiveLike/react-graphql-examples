@@ -21,8 +21,25 @@ export interface ImagePoll {
     options: PollOption[]
 }
 
-export interface PollVote {
+export interface CreatePollVote {
     widgetId: string;
     profileId: string;
     optionId: string;
+    id: string;
 }
+
+export interface UpdatePollVote {
+    widgetId: string;
+    profileId: string;
+    optionId: string;
+    id: string;
+}
+
+export interface WidgetInteraction {
+    id: string;
+    optionId: string;
+    profileId: string;
+    widgetId: string;
+}
+
+export type WidgetInteractions = {interactions: WidgetInteraction[]}[]

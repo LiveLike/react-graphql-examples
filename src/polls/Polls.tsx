@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
-import { getTextPoll, getImagePoll, createPollVote } from './requests';
-import { TextPoll, ImagePoll, PollOption, PollVote } from './types';
+import { getTextPoll, getImagePoll, createPollVote, updatePollVote, getWidgetInteractions } from './requests';
+import { TextPoll, ImagePoll, PollOption, CreatePollVote, WidgetInteraction } from './types';
 import './Polls.scss';
 
-const Poll: React.FC<{ widgetPayload: TextPoll | ImagePoll }> = ({
-  widgetPayload,
+const Poll: React.FC<{ widgetPayload: TextPoll | ImagePoll, interaction: WidgetInteraction | null }> = ({
+  widgetPayload, interaction
 }) => {
+  const interactedOptionId = interaction && interaction.optionId;
   const [options, setOptions] = useState<PollOption[]>(widgetPayload.options);
-  const [selectedOptionId, setSelectedOptionId] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [selectedOptionId, setSelectedOptionId] = useState(interactedOptionId || '');
+  const [submitted, setSubmitted] = useState(!!interactedOptionId || false);
+  const [vote, setVote] = useState(interaction || null);
 
   const totalVotes = options.reduce((a: any, b: any) => a + b.voteCount, 0);
 
-  const updateOptions = (pollVote: PollVote) => {
+  const updateOptions = (pollVote: CreatePollVote) => {
     const updatedOptions = [...options];
     const votedOptionIdx = updatedOptions.findIndex(
       (option) => option.id === pollVote.optionId
@@ -22,11 +24,15 @@ const Poll: React.FC<{ widgetPayload: TextPoll | ImagePoll }> = ({
   };
 
   const handleSubmit = async () => {
-    if (!submitted) {
+    if (!submitted && !vote) {
       setSubmitted(true);
-
       const pollVote = await createPollVote(widgetPayload, selectedOptionId);
+      setVote(pollVote);
       updateOptions(pollVote);
+    } else {
+      // const updatedPollVote = await updatePollVote(widgetPayload, selectedOptionId, vote!.id);
+      // setVote(updatedPollVote);
+      // updateOptions(updatedPollVote);
     }
   };
 
@@ -91,23 +97,31 @@ const Poll: React.FC<{ widgetPayload: TextPoll | ImagePoll }> = ({
 export default function App() {
   const [textPoll, setTextPoll] = useState<TextPoll | null>(null);
   const [imagePoll, setImagePoll] = useState<ImagePoll | null>(null);
+  const [textPollInteraction, setTextPollInteraction] = useState<WidgetInteraction | null>(null);
+  const [imagePollInteraction, setImagePollInteraction] = useState<WidgetInteraction | null>(null);
 
   const getPoll = async () => {
     const textPoll = await getTextPoll();
+    const textPollWidgetInteractions = await getWidgetInteractions(textPoll);
     setTextPoll(textPoll);
+    setTextPollInteraction(textPollWidgetInteractions[0].interactions[0])
 
     const imagePoll = await getImagePoll();
+    const imagePollWidgetInteractions = await getWidgetInteractions(imagePoll);
     setImagePoll(imagePoll);
+    setImagePollInteraction(imagePollWidgetInteractions[0].interactions[0])
+
   };
 
   useEffect(() => {
+    
     getPoll();
   }, []);
 
   return (
     <>
-      {textPoll ? <Poll widgetPayload={textPoll} /> : null}
-      {imagePoll ? <Poll widgetPayload={imagePoll} /> : null}
+      {textPoll ? <Poll widgetPayload={textPoll} interaction={textPollInteraction} /> : null}
+      {imagePoll ? <Poll widgetPayload={imagePoll} interaction={imagePollInteraction} /> : null}
     </>
   );
 }
